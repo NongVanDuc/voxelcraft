@@ -52,6 +52,7 @@ export class Game {
   private baseFov = 72;
   private locked = false;
 
+  private pauseEl!: HTMLDivElement;
   private highlight: THREE.LineSegments;
   private crackMesh: THREE.Mesh;
   private crackMaterials: THREE.MeshBasicMaterial[] = [];
@@ -106,8 +107,9 @@ export class Game {
     this.invScreen = new InventoryScreen(parent, this.atlas, this.inventory, this.sound);
     this.invScreen.onClose = () => {
       this.hotbarDirty = true;
-      if (!document.pointerLockElement) this.renderer.domElement.requestPointerLock();
+      this.lock();
     };
+    this.setupPauseOverlay(parent);
     this.entities = new EntityManager(this.scene, this.atlas);
     this.mobs = new MobManager(this.scene);
     this.playerModel = new PlayerModel(this.scene);
@@ -158,10 +160,38 @@ export class Game {
     return this.renderer.domElement;
   }
 
-  /** Called from the play button (user gesture): end the title intro + enable audio. */
+  /** Called from the play button (user gesture): end the title intro + enable audio + lock. */
   onPlay(): void {
     this.cinematic = false;
     this.sound.resume();
+    this.lock();
+  }
+
+  /** Robustly request pointer lock (swallows the promise rejection some browsers throw). */
+  private lock(): void {
+    if (this.invScreen.open) return;
+    const el = this.renderer.domElement as HTMLElement & { requestPointerLock: (o?: unknown) => unknown };
+    try {
+      const p = el.requestPointerLock();
+      if (p && typeof (p as Promise<void>).catch === 'function') (p as Promise<void>).catch(() => {});
+    } catch { /* ignore */ }
+  }
+
+  private setupPauseOverlay(parent: HTMLElement): void {
+    const el = document.createElement('div');
+    el.id = 'vc-pause';
+    el.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);z-index:25;cursor:pointer;font-family:monospace;color:#fff';
+    el.innerHTML = '<div style="text-align:center;background:rgba(8,14,28,0.65);border:2px solid rgba(255,255,255,0.18);padding:24px 44px;border-radius:6px"><div style="font-size:26px;letter-spacing:2px">▶ Click to play</div><div style="font-size:12px;color:#bcd;margin-top:8px">click to control the mouse · Esc to release</div></div>';
+    el.addEventListener('click', () => this.lock());
+    parent.appendChild(el);
+    this.pauseEl = el;
+  }
+
+  /** Show the "click to play" prompt whenever the game is live but the pointer isn't locked. */
+  private updatePauseOverlay(): void {
+    const show = !this.cinematic && !this.locked && !this.invScreen.open && !this.stats.dead;
+    const disp = show ? 'flex' : 'none';
+    if (this.pauseEl.style.display !== disp) this.pauseEl.style.display = disp;
   }
 
   private get creative(): boolean {
@@ -182,11 +212,16 @@ export class Game {
   }
 
   private giveStartingItems(): void {
-    this.inventory.setSlot(0, { id: Item.WOODEN_PICKAXE, count: 1 });
-    this.inventory.setSlot(1, { id: Item.WOODEN_AXE, count: 1 });
-    this.inventory.setSlot(2, { id: Item.WOODEN_SHOVEL, count: 1 });
-    this.inventory.setSlot(3, { id: Block.PLANKS, count: 16 });
-    this.inventory.setSlot(4, { id: Block.GLASS, count: 8 });
+    // building blocks first so right-click places immediately; tools in 7-9
+    this.inventory.setSlot(0, { id: Block.GRASS, count: 64 });
+    this.inventory.setSlot(1, { id: Block.DIRT, count: 64 });
+    this.inventory.setSlot(2, { id: Block.STONE, count: 64 });
+    this.inventory.setSlot(3, { id: Block.OAK_LOG, count: 64 });
+    this.inventory.setSlot(4, { id: Block.PLANKS, count: 64 });
+    this.inventory.setSlot(5, { id: Block.GLASS, count: 32 });
+    this.inventory.setSlot(6, { id: Item.WOODEN_PICKAXE, count: 1 });
+    this.inventory.setSlot(7, { id: Item.WOODEN_AXE, count: 1 });
+    this.inventory.setSlot(8, { id: Item.WOODEN_SHOVEL, count: 1 });
   }
 
   /** Pick an elevated, scenic dry vantage near origin and face the open view. */
@@ -242,8 +277,8 @@ export class Game {
 
   private bindEvents(): void {
     const canvas = this.renderer.domElement;
-    canvas.addEventListener('click', () => { if (!this.locked && !this.invScreen.open) canvas.requestPointerLock(); });
-    document.addEventListener('pointerlockchange', () => { this.locked = document.pointerLockElement === canvas; });
+    canvas.addEventListener('click', () => { if (!this.locked && !this.invScreen.open) this.lock(); });
+    document.addEventListener('pointerlockchange', () => { this.locked = document.pointerLockElement === canvas; this.updatePauseOverlay(); });
     document.addEventListener('mousemove', (e) => { if (this.locked) this.player.applyMouse(e.movementX, e.movementY, 0.0022); });
 
     canvas.addEventListener('mousedown', (e) => {
@@ -667,6 +702,7 @@ export class Game {
       (this.creative ? '  [creative]' : '  [survival]'),
     );
 
+    this.updatePauseOverlay();
     this.renderer.render(this.scene, this.camera);
   }
 }

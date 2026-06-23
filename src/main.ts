@@ -37,6 +37,5 @@ app.appendChild(overlay);
 
 overlay.querySelector('#vc-play')!.addEventListener('click', () => {
   overlay.remove();
-  game.onPlay();
-  game.domElement.requestPointerLock();
+  game.onPlay(); // ends the intro, enables audio, and locks the pointer
 });
