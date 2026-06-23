@@ -15,7 +15,7 @@ interface MobConfig {
 }
 
 const CONFIG: Record<MobType, MobConfig> = {
-  zombie: { hostile: true, maxHp: 20, speed: 1.7, width: 0.6, height: 1.9, attack: 3 },
+  zombie: { hostile: true, maxHp: 20, speed: 1.6, width: 0.6, height: 1.9, attack: 1.5 },
   pig: { hostile: false, maxHp: 10, speed: 1.1, width: 0.7, height: 0.9, attack: 0 },
   cow: { hostile: false, maxHp: 10, speed: 1.0, width: 0.8, height: 1.0, attack: 0 },
   sheep: { hostile: false, maxHp: 8, speed: 1.0, width: 0.7, height: 0.95, attack: 0 },
@@ -167,7 +167,7 @@ export class MobManager {
   private mobs: Mob[] = [];
   private spawnTimer = 0;
   private readonly maxPassive = 6;
-  private readonly maxHostile = 10;
+  private readonly maxHostile = 4;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -280,7 +280,7 @@ export class MobManager {
           m.vel.x = Math.sin(m.yaw) * m.cfg.speed;
           m.vel.z = Math.cos(m.yaw) * m.cfg.speed;
           if (distToPlayer < 1.4 && m.attackCooldown <= 0) {
-            m.attackCooldown = 1;
+            m.attackCooldown = 1.3; // slower hits, less punishing
             ctx.damagePlayer(m.cfg.attack, m.pos.x, m.pos.z);
           }
         } else { m.vel.x = 0; m.vel.z = 0; }

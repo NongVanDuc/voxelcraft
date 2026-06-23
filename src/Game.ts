@@ -262,7 +262,11 @@ export class Game {
   private bindEvents(): void {
     const canvas = this.renderer.domElement;
     canvas.addEventListener('click', () => { if (!this.locked && !this.invScreen.open) this.lock(); });
-    document.addEventListener('pointerlockchange', () => { this.locked = document.pointerLockElement === canvas; this.updatePauseOverlay(); });
+    document.addEventListener('pointerlockchange', () => {
+      this.locked = document.pointerLockElement === canvas;
+      if (!this.locked) { this.leftHeld = false; this.rightHeld = false; this.resetMining(); }
+      this.updatePauseOverlay();
+    });
     document.addEventListener('mousemove', (e) => { if (this.locked) this.player.applyMouse(e.movementX, e.movementY, 0.0022); });
 
     canvas.addEventListener('mousedown', (e) => {
@@ -590,6 +594,7 @@ export class Game {
     this.player.setPosition(SPAWN.x + 0.5, h + 2, SPAWN.z + 0.5);
     this.peakY = this.player.pos.y;
     this.deathShown = false;
+    this.lock(); // re-grab the mouse after respawn (Respawn click is a user gesture)
   }
 
   // ---------------- loop ----------------
@@ -613,7 +618,9 @@ export class Game {
       return;
     }
 
-    if (!this.invScreen.open) {
+    // Simulate only while actively playing: pointer locked, no menu, not dead.
+    // (Unlocked = "Click to play" prompt = paused, so mobs freeze.)
+    if (this.locked && !this.invScreen.open && !this.stats.dead) {
     this.actionCooldown -= dt;
     this.eatCooldown -= dt;
     this.attackCooldown -= dt;
@@ -637,7 +644,11 @@ export class Game {
       const submerged = this.world.getBlock(Math.floor(this.player.pos.x), Math.floor(this.player.pos.y + 1.6), Math.floor(this.player.pos.z)) === Block.WATER;
       this.stats.update(dt, submerged);
       if (this.stats.pendingHurt) { this.hud.flashDamage(); this.sound.hurt(); this.stats.pendingHurt = false; }
-      if (this.stats.dead && !this.deathShown) { this.deathShown = true; this.hud.showDeath(() => this.respawn()); }
+      if (this.stats.dead && !this.deathShown) {
+        this.deathShown = true;
+        if (document.pointerLockElement) document.exitPointerLock(); // free the cursor for the Respawn button
+        this.hud.showDeath(() => this.respawn());
+      }
     }
 
     // is a mob in our crosshair (closer than the targeted block)?
@@ -664,7 +675,7 @@ export class Game {
     });
     this.mobs.update(dt, this.world, this.player.pos, this.isNight, this.mobContext());
     this.updateView(dt);
-    } // end !invScreen.open
+    } // end simulation gate
 
     // HUD
     if (this.hotbarDirty) { this.hud.buildHotbar(this.inventory.slots, this.inventory.selected); this.hotbarDirty = false; }
