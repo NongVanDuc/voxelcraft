@@ -22,8 +22,11 @@ export class TerrainGenerator {
     const continent = this.height.fbm2D(wx * 0.006, wz * 0.006, 4);
     const hills = this.height.fbm2D(wx * 0.025, wz * 0.025, 3);
     const detail = this.height.noise2D(wx * 0.08, wz * 0.08) * 1.5;
-    const h = base + continent * 22 + hills * 7 + detail;
-    return Math.max(6, Math.min(CHUNK_Y - 24, Math.floor(h)));
+    // mountain mask: squared so peaks are localized and dramatic
+    const mask = this.height.fbm2D(wx * 0.0035 + 50, wz * 0.0035 + 50, 2);
+    const mountain = Math.max(0, mask) ** 2 * 46;
+    const h = base + continent * 22 + hills * 7 + detail + mountain;
+    return Math.max(6, Math.min(CHUNK_Y - 12, Math.floor(h)));
   }
 
   generate(chunk: Chunk): void {
@@ -67,6 +70,14 @@ export class TerrainGenerator {
         if (top < SEA_LEVEL) {
           for (let y = top + 1; y <= SEA_LEVEL; y++) chunk.setRaw(x, y, z, Block.WATER);
         }
+
+        // decorate grassy ground with tall grass + occasional flowers
+        if (!underwater && top > SEA_LEVEL + 1 && top <= SEA_LEVEL + 30 && chunk.get(x, top, z) === Block.GRASS) {
+          const pr = hash3(wx, 1, wz, this.seed ^ 0x515);
+          if (pr < 0.01) chunk.setRaw(x, top + 1, z, Block.FLOWER_RED);
+          else if (pr < 0.02) chunk.setRaw(x, top + 1, z, Block.FLOWER_YELLOW);
+          else if (pr < 0.22) chunk.setRaw(x, top + 1, z, Block.TALL_GRASS);
+        }
       }
     }
 
@@ -88,9 +99,12 @@ export class TerrainGenerator {
       for (let z = -margin; z < CHUNK_Z + margin; z++) {
         const wx = ox + x;
         const wz = oz + z;
-        if (hash2(wx, wz, this.seed ^ 0x7a7a) >= 0.018) continue; // ~1.8% density
+        // forest mask makes some regions densely wooded, others sparse
+        const forest = this.height.fbm2D(wx * 0.01 + 200, wz * 0.01 + 200, 2);
+        const density = 0.012 + Math.max(0, forest) * 0.06; // ~1.2%..7.2%
+        if (hash2(wx, wz, this.seed ^ 0x7a7a) >= density) continue;
         const top = this.heightAt(wx, wz);
-        if (top <= SEA_LEVEL + 1 || top > SEA_LEVEL + 30) continue; // grassy band only
+        if (top <= SEA_LEVEL + 1 || top > SEA_LEVEL + 28) continue; // grassy band only
         this.placeTree(chunk, x, top, z, wx, wz);
       }
     }

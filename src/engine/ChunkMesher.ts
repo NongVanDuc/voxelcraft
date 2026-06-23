@@ -63,6 +63,29 @@ class GeoBuilder {
     this.vcount += 4;
   }
 
+  /** Two crossed double-sided quads for plants/flowers. */
+  addCross(bx: number, by: number, bz: number, t: { u0: number; v0: number; u1: number; v1: number }): void {
+    const planes = [
+      [[0.1, 0, 0.1], [0.9, 0, 0.9], [0.9, 1, 0.9], [0.1, 1, 0.1]],
+      [[0.9, 0, 0.1], [0.1, 0, 0.9], [0.1, 1, 0.9], [0.9, 1, 0.1]],
+    ];
+    const uv = [[t.u0, t.v1], [t.u1, t.v1], [t.u1, t.v0], [t.u0, t.v0]];
+    for (const c of planes) {
+      for (const back of [false, true]) {
+        const base = this.vcount;
+        for (let i = 0; i < 4; i++) {
+          this.positions.push(bx + c[i][0], by + c[i][1], bz + c[i][2]);
+          this.normals.push(0, 1, 0);
+          this.colors.push(1, 1, 1);
+          this.uvs.push(uv[i][0], uv[i][1]);
+        }
+        if (!back) this.indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+        else this.indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
+        this.vcount += 4;
+      }
+    }
+  }
+
   build(): THREE.BufferGeometry | null {
     if (this.indices.length === 0) return null;
     const g = new THREE.BufferGeometry();
@@ -92,6 +115,11 @@ export function buildChunkMesh(chunk: Chunk, atlas: TextureAtlas, getBlock: GetB
         const builder = def.transparent ? transparent : opaque;
         const wx = ox + x;
         const wz = oz + z;
+
+        if (def.cross) {
+          builder.addCross(x, y, z, atlas.getTileUV(def.faces[0]));
+          continue;
+        }
 
         for (let f = 0; f < 6; f++) {
           const face = FACES[f];

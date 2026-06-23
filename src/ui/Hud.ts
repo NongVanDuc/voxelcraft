@@ -66,7 +66,7 @@ export class Hud {
         </div>
         <div id="vc-hotbar"></div>
       </div>
-      <div id="vc-hint">WASD · Ctrl sprint · Shift sneak · Space jump<br>L/R-click break/place · 1-9 · E inventory · F5 view · F / 2×Space fly</div>
+      <div id="vc-hint">Arrows/WASD · Ctrl sprint · Shift sneak · Space jump<br>L/R-click break/place · 1-9 · E inventory · F5 view · F / 2×Space fly</div>
       <div id="vc-death"><h1>You Died!</h1><button id="vc-respawn">Respawn</button></div>
     `;
     parent.appendChild(this.root);

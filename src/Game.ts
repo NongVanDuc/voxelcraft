@@ -45,6 +45,7 @@ export class Game {
 
   private input: InputState = { forward: false, back: false, left: false, right: false, jump: false, sprint: false, sneak: false };
   private viewMode = 0; // 0 first-person, 1 third-back, 2 third-front
+  private cinematic = true; // slow camera pan behind the title screen
   private playerModel: PlayerModel;
   private sky: Sky;
   private lastSpace = 0;
@@ -157,8 +158,9 @@ export class Game {
     return this.renderer.domElement;
   }
 
-  /** Called from the play button (user gesture) to enable audio. */
+  /** Called from the play button (user gesture): end the title intro + enable audio. */
   onPlay(): void {
+    this.cinematic = false;
     this.sound.resume();
   }
 
@@ -187,20 +189,32 @@ export class Game {
     this.inventory.setSlot(4, { id: Block.GLASS, count: 8 });
   }
 
-  /** Find dry land above sea level near origin so the player never spawns drowning. */
-  private findSpawn(): { x: number; z: number; y: number } {
-    for (let r = 0; r <= 40; r++) {
-      for (let dx = -r; dx <= r; dx++) {
-        for (let dz = -r; dz <= r; dz++) {
-          if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue; // ring only
-          const x = SPAWN.x + dx, z = SPAWN.z + dz;
-          const h = this.world.terrain.heightAt(x, z);
-          if (h >= SEA_LEVEL + 2) return { x, z, y: h + 2 };
-        }
+  /** Pick an elevated, scenic dry vantage near origin and face the open view. */
+  private findSpawn(): { x: number; z: number; y: number; yaw: number; pitch: number } {
+    const t = this.world.terrain;
+    let best: { x: number; z: number; h: number; score: number } | null = null;
+    for (let dx = -30; dx <= 30; dx += 2) {
+      for (let dz = -30; dz <= 30; dz += 2) {
+        const x = SPAWN.x + dx, z = SPAWN.z + dz;
+        const h = t.heightAt(x, z);
+        if (h < SEA_LEVEL + 4) continue; // dry + a little elevated
+        // prefer pleasant hills (~sea+14), not extreme peaks
+        const score = h - Math.abs(h - (SEA_LEVEL + 14)) * 1.5;
+        if (!best || score > best.score) best = { x, z, h, score };
       }
     }
-    const h = this.world.terrain.heightAt(SPAWN.x, SPAWN.z);
-    return { x: SPAWN.x, z: SPAWN.z, y: h + 2 };
+    if (!best) { const h = t.heightAt(SPAWN.x, SPAWN.z); best = { x: SPAWN.x, z: SPAWN.z, h, score: 0 }; }
+
+    // face the most open (lowest) direction for a nice vista
+    let lowDir = { dx: 0, dz: -1 }, lowH = Infinity;
+    for (let a = 0; a < 8; a++) {
+      const ang = (a / 8) * Math.PI * 2;
+      const dx = Math.cos(ang), dz = Math.sin(ang);
+      const hh = t.heightAt(Math.round(best.x + dx * 14), Math.round(best.z + dz * 14));
+      if (hh < lowH) { lowH = hh; lowDir = { dx, dz }; }
+    }
+    const yaw = Math.atan2(-lowDir.dx, -lowDir.dz);
+    return { x: best.x, z: best.z, y: best.h + 2, yaw, pitch: -0.12 };
   }
 
   private spawnPlayer(): void {
@@ -209,10 +223,13 @@ export class Game {
       sx = this.save.player.x; sy = this.save.player.y; sz = this.save.player.z;
       yaw = this.save.player.yaw; pitch = this.save.player.pitch;
       SPAWN.x = Math.floor(sx); SPAWN.z = Math.floor(sz);
+      this.cinematic = false; // returning players skip the intro
     } else {
       const s = this.findSpawn();
       SPAWN.x = s.x; SPAWN.z = s.z;
       sx = s.x + 0.5; sy = s.y; sz = s.z + 0.5;
+      yaw = s.yaw; pitch = s.pitch;
+      this.timeOfDay = 0.22; // bright morning for a good first impression
     }
     const pcx = Math.floor(sx / 16), pcz = Math.floor(sz / 16);
     for (let dx = -2; dx <= 2; dx++)
@@ -258,10 +275,10 @@ export class Game {
 
   private onKey(e: KeyboardEvent, down: boolean): void {
     switch (e.code) {
-      case 'KeyW': this.input.forward = down; break;
-      case 'KeyS': this.input.back = down; break;
-      case 'KeyA': this.input.left = down; break;
-      case 'KeyD': this.input.right = down; break;
+      case 'KeyW': case 'ArrowUp': this.input.forward = down; e.preventDefault(); break;
+      case 'KeyS': case 'ArrowDown': this.input.back = down; e.preventDefault(); break;
+      case 'KeyA': case 'ArrowLeft': this.input.left = down; e.preventDefault(); break;
+      case 'KeyD': case 'ArrowRight': this.input.right = down; e.preventDefault(); break;
       case 'Space':
         this.input.jump = down; e.preventDefault();
         if (down && !e.repeat) { const t = performance.now(); if (t - this.lastSpace < 300) this.player.toggleFly(); this.lastSpace = t; }
@@ -567,6 +584,15 @@ export class Game {
   private frame(): void {
     let dt = this.clock.getDelta();
     if (dt > 0.1) dt = 0.1;
+
+    // title intro: slow cinematic pan over the world behind the menu
+    if (this.cinematic) {
+      this.player.spin(dt * 0.05);
+      this.world.update(this.player.pos.x, this.player.pos.z, RENDER_DISTANCE);
+      this.updateDayNight(dt);
+      this.renderer.render(this.scene, this.camera);
+      return;
+    }
 
     if (!this.invScreen.open) {
     this.actionCooldown -= dt;

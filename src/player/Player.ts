@@ -53,6 +53,12 @@ export class Player {
     this.vel.y = 0;
   }
 
+  /** Cinematic auto-pan for the title screen: rotate the view in place. */
+  spin(dyaw: number): void {
+    this.yaw += dyaw;
+    this.syncCamera();
+  }
+
   applyMouse(dx: number, dy: number, sensitivity: number): void {
     this.yaw -= dx * sensitivity;
     this.pitch -= dy * sensitivity;

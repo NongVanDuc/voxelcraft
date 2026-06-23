@@ -19,6 +19,9 @@ export const enum Block {
   GRAVEL = 14,
   SNOW = 15,
   CRAFTING_TABLE = 16,
+  TALL_GRASS = 17,
+  FLOWER_RED = 18,
+  FLOWER_YELLOW = 19,
 }
 
 export interface BlockDef {
@@ -40,6 +43,8 @@ export interface BlockDef {
   drop?: Block;
   /** Light emitted (0..15), reserved for later. */
   light?: number;
+  /** Rendered as two crossed quads (plants/flowers) instead of a cube. */
+  cross?: boolean;
 }
 
 function uniform(name: string): [string, string, string, string, string, string] {
@@ -69,6 +74,9 @@ export const BLOCKS: Record<number, BlockDef> = {
   [Block.GRAVEL]: { id: Block.GRAVEL, name: 'Gravel', faces: uniform('gravel'), opaque: true, solid: true, transparent: false, cullSame: false, hardness: 0.6 },
   [Block.SNOW]: { id: Block.SNOW, name: 'Snow', faces: column('snow_side', 'snow', 'dirt'), opaque: true, solid: true, transparent: false, cullSame: false, hardness: 0.5 },
   [Block.CRAFTING_TABLE]: { id: Block.CRAFTING_TABLE, name: 'Crafting Table', faces: ['crafting_side', 'crafting_side', 'crafting_top', 'planks', 'crafting_side', 'crafting_side'], opaque: true, solid: true, transparent: false, cullSame: false, hardness: 2.5 },
+  [Block.TALL_GRASS]: { id: Block.TALL_GRASS, name: 'Tall Grass', faces: uniform('tall_grass'), opaque: false, solid: false, transparent: false, cullSame: false, hardness: 0, cross: true },
+  [Block.FLOWER_RED]: { id: Block.FLOWER_RED, name: 'Poppy', faces: uniform('flower_red'), opaque: false, solid: false, transparent: false, cullSame: false, hardness: 0, cross: true },
+  [Block.FLOWER_YELLOW]: { id: Block.FLOWER_YELLOW, name: 'Dandelion', faces: uniform('flower_yellow'), opaque: false, solid: false, transparent: false, cullSame: false, hardness: 0, cross: true },
 };
 
 export function blockDef(id: number): BlockDef {

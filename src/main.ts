@@ -13,17 +13,18 @@ overlay.innerHTML = `
     <h1>VOXELCRAFT</h1>
     <p>A blocky sandbox in your browser</p>
     <button id="vc-play">Click to Play</button>
-    <div class="vc-controls">WASD move · Space jump · Mouse look · L/R-click break/place · 1–9 blocks · F fly</div>
+    <div class="vc-controls">Arrows / WASD move · Mouse look · Space jump · L/R-click break/place<br>1–9 blocks · E inventory · F5 view · F / 2×Space fly</div>
   </div>`;
 const style = document.createElement('style');
 style.textContent = `
   body { margin: 0; overflow: hidden; background: #87ceeb; font-family: monospace; }
   #vc-title { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(circle at 50% 35%, #6db4e6, #2a4a73); z-index: 50; color: #fff; }
-  .vc-title-card { text-align: center; }
+    background: radial-gradient(circle at 50% 30%, rgba(8,16,34,0.10), rgba(4,8,22,0.55)); z-index: 50; color: #fff; }
+  .vc-title-card { text-align: center; background: rgba(8,14,28,0.42); padding: 40px 64px;
+    border: 2px solid rgba(255,255,255,0.12); border-radius: 6px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
   .vc-title-card h1 { font-size: 64px; margin: 0 0 6px; letter-spacing: 6px;
-    text-shadow: 4px 4px 0 #1b3a1b, 0 0 18px rgba(0,0,0,0.4); color: #c8f08a; }
-  .vc-title-card p { margin: 0 0 28px; color: #e8f4ff; font-size: 16px; }
+    text-shadow: 4px 4px 0 #1b3a1b, 0 0 18px rgba(0,0,0,0.6); color: #c8f08a; }
+  .vc-title-card p { margin: 0 0 28px; color: #e8f4ff; font-size: 16px; text-shadow: 1px 1px 2px #000; }
   #vc-play { font-family: monospace; font-size: 20px; padding: 12px 36px; cursor: pointer;
     color: #fff; background: #6a9a3a; border: 3px solid #20300f; box-shadow: 0 4px 0 #20300f;
     text-shadow: 1px 1px 0 #20300f; }

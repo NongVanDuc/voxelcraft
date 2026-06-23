@@ -192,6 +192,33 @@ const painters: Record<string, Painter> = {
     for (let i = 9; i < 14; i++) { px(i, 10, vary(C.plankSeam, r, 4)); px(11, i, vary(C.plankSeam, r, 4)); }
   },
 
+  tall_grass: (px, r) => {
+    clear(px);
+    for (let x = 2; x < 14; x++) {
+      if (r() < 0.35) continue;
+      const h = 5 + Math.floor(r() * 7);
+      for (let y = 15; y >= 16 - h; y--) px(x, y, vary(r() < 0.5 ? C.grassTop : C.grassTop2, r, 22));
+    }
+  },
+  flower_red: (px, r) => {
+    clear(px);
+    const stem = { r: 50, g: 120, b: 40 };
+    for (let y = 7; y < 15; y++) px(8, y, vary(stem, r, 10));
+    px(7, 11, vary(stem, r, 8)); px(9, 9, vary(stem, r, 8));
+    const red = { r: 200, g: 40, b: 40 };
+    for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) px(8 + dx, 4 + dy, vary(red, r, 18));
+    px(8, 4, { r: 245, g: 205, b: 70 });
+  },
+  flower_yellow: (px, r) => {
+    clear(px);
+    const stem = { r: 50, g: 120, b: 40 };
+    for (let y = 8; y < 15; y++) px(8, y, vary(stem, r, 10));
+    px(7, 11, vary(stem, r, 8));
+    const yel = { r: 240, g: 210, b: 40 };
+    for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) px(8 + dx, 5 + dy, vary(yel, r, 16));
+    px(8, 5, { r: 180, g: 120, b: 30 });
+  },
+
   // --- item icons (transparent background) ---
   item_stick: (px, r) => {
     clear(px);
