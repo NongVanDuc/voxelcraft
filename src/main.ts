@@ -13,7 +13,7 @@ overlay.innerHTML = `
     <h1>VOXELCRAFT</h1>
     <p>A blocky sandbox in your browser</p>
     <button id="vc-play">Click to Play</button>
-    <div class="vc-controls">Arrows / WASD move · Mouse look · Space jump · hold L-click mine · R-click place<br>1–9 blocks · E inventory · V view · F fly · F5 = new world</div>
+    <div class="vc-controls">Arrows / WASD move · Mouse look · Space jump · hold L-click mine · R-click place<br>1–9 blocks · <b>E = inventory + crafting</b> · V view · F fly · F5 = new world</div>
   </div>`;
 const style = document.createElement('style');
 style.textContent = `

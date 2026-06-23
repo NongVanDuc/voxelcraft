@@ -10,6 +10,10 @@ const CSS = `
 #vc-inv .panel { background: #c6c6c6; border: 4px solid #373737; box-shadow: 0 0 0 4px #555, 6px 6px 0 rgba(0,0,0,0.4);
   padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 #vc-inv .title { color: #404040; font-size: 16px; font-weight: bold; }
+#vc-inv .craftlabel { color: #5a4a2a; font-size: 12px; font-weight: bold; margin-bottom: -4px; }
+#vc-inv .hints { color: #4a4a4a; font-size: 11px; line-height: 1.6; max-width: 430px; text-align: center;
+  border-top: 2px solid #9a9a9a; padding-top: 8px; margin-top: 2px; }
+#vc-inv .hints b { color: #2a4a1a; }
 #vc-inv .craft { display: flex; align-items: center; gap: 14px; }
 #vc-inv .grid { display: grid; gap: 2px; }
 #vc-inv .arrow { font-size: 28px; color: #404040; }
@@ -99,8 +103,13 @@ export class InventoryScreen {
 
     const title = document.createElement('div');
     title.className = 'title';
-    title.textContent = this.cols === 3 ? 'Crafting Table' : 'Inventory';
+    title.textContent = this.cols === 3 ? '⚒ Crafting Table (3×3)' : '⚒ Inventory & Crafting (2×2)';
     this.panel.appendChild(title);
+
+    const craftLabel = document.createElement('div');
+    craftLabel.className = 'craftlabel';
+    craftLabel.textContent = 'Crafting — drag items into the grid, then take the result →';
+    this.panel.appendChild(craftLabel);
 
     // crafting row: grid + arrow + output
     const craftRow = document.createElement('div');
@@ -126,6 +135,14 @@ export class InventoryScreen {
     hot.className = 'hotrow';
     for (let i = 0; i < 9; i++) hot.appendChild(this.makeSlot({ kind: 'inv', index: i }));
     this.panel.appendChild(hot);
+
+    // recipe hints
+    const hints = document.createElement('div');
+    hints.className = 'hints';
+    hints.innerHTML = this.cols === 3
+      ? 'Tools (shape matters): <b>Pickaxe</b> = 3 Planks top row + 2 Sticks down the middle · <b>Axe</b> · <b>Shovel</b> = 1 Plank over 2 Sticks · <b>Stone Pickaxe</b> = 3 Cobblestone + 2 Sticks'
+      : '<b>1 Log → 4 Planks</b> · <b>2 Planks → 4 Sticks</b> · <b>4 Planks → Crafting Table</b> · place the Table & right-click it for the 3×3 grid (tools)';
+    this.panel.appendChild(hints);
 
     this.root.appendChild(this.panel);
   }
