@@ -21,6 +21,7 @@ import { hashSeed } from './util/PRNG';
 
 const DAY_BLUE = new THREE.Color(0x87ceeb);
 const NIGHT_BLUE = new THREE.Color(0x0a0c1e);
+const SUNSET = new THREE.Color(0xe8804a);
 const RENDER_DISTANCE = 8;
 const DAY_LENGTH = 600;
 const SPAWN = { x: 8, z: 8 };
@@ -522,6 +523,8 @@ export class Game {
     const daylight = Math.max(0.2, Math.min(1, 0.2 + 0.95 * s));
     const norm = (daylight - 0.2) / 0.8;
     this.skyColor.copy(NIGHT_BLUE).lerp(DAY_BLUE, norm);
+    const sunset = Math.max(0, 1 - Math.abs(s) * 4); // warm glow when the sun is near the horizon
+    this.skyColor.lerp(SUNSET, sunset * 0.45);
     this.scene.background = this.skyColor;
     (this.scene.fog as THREE.Fog).color.copy(this.skyColor);
     this.world.setDaylight(daylight);
