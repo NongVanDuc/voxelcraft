@@ -53,6 +53,7 @@ export class Game {
   private locked = false;
 
   private pauseEl!: HTMLDivElement;
+  private playStartedAt = 0;
   private highlight: THREE.LineSegments;
   private crackMesh: THREE.Mesh;
   private crackMaterials: THREE.MeshBasicMaterial[] = [];
@@ -84,7 +85,8 @@ export class Game {
   private save: SaveData | null = null;
 
   constructor(parent: HTMLElement, seedStr = 'voxelcraft') {
-    const seed = hashSeed(seedStr);
+    void seedStr;
+    const seed = Math.floor(Math.random() * 0x7fffffff); // new random world each load
 
     this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -127,33 +129,12 @@ export class Game {
     this.crackMesh.visible = false;
     this.scene.add(this.crackMesh);
 
-    this.save = WorldStore.load();
-    if (this.save) {
-      this.world.loadEdits(this.save.edits);
-      this.inventory.load(this.save.inventory);
-      this.timeOfDay = this.save.time;
-    } else {
-      this.giveStartingItems();
-    }
+    // Every page load (and F5) starts a brand-new random world.
+    WorldStore.clear();
+    this.save = null;
+    this.giveStartingItems();
     this.spawnPlayer();
     this.bindEvents();
-    this.setupAutosave();
-  }
-
-  private setupAutosave(): void {
-    setInterval(() => this.persist(), 15000);
-    window.addEventListener('beforeunload', () => this.persist());
-  }
-
-  private persist(): void {
-    const p = this.player.pos;
-    WorldStore.save({
-      version: 1,
-      player: { x: p.x, y: p.y, z: p.z, yaw: this.player.yaw, pitch: this.player.pitch },
-      time: this.timeOfDay,
-      inventory: this.inventory.serialize(),
-      edits: this.world.serializeEdits(),
-    });
   }
 
   get domElement(): HTMLCanvasElement {
@@ -164,6 +145,7 @@ export class Game {
   onPlay(): void {
     this.cinematic = false;
     this.sound.resume();
+    this.playStartedAt = performance.now();
     this.lock();
   }
 
@@ -189,7 +171,9 @@ export class Game {
 
   /** Show the "click to play" prompt whenever the game is live but the pointer isn't locked. */
   private updatePauseOverlay(): void {
-    const show = !this.cinematic && !this.locked && !this.invScreen.open && !this.stats.dead;
+    // grace window after pressing Play so the prompt never flashes over a lock that's still engaging
+    const grace = performance.now() - this.playStartedAt < 700;
+    const show = !this.cinematic && !this.locked && !this.invScreen.open && !this.stats.dead && !grace;
     const disp = show ? 'flex' : 'none';
     if (this.pauseEl.style.display !== disp) this.pauseEl.style.display = disp;
   }
@@ -321,7 +305,7 @@ export class Game {
       case 'ShiftLeft': this.input.sneak = down; break;
       case 'ControlLeft': this.input.sprint = down; break;
       case 'KeyF': if (down) this.player.toggleFly(); break;
-      case 'F5': if (down) { this.cycleView(); e.preventDefault(); } break;
+      case 'KeyV': if (down) this.cycleView(); break; // view cycle moved off F5 so F5 reloads a new world
       case 'KeyE': if (down) this.toggleInventory(2); break;
       case 'Escape': if (down && this.invScreen.open) this.invScreen.hide(); break;
       default:
