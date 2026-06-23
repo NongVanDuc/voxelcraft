@@ -140,8 +140,8 @@ export class InventoryScreen {
     const hints = document.createElement('div');
     hints.className = 'hints';
     hints.innerHTML = this.cols === 3
-      ? 'Tools (shape matters): <b>Pickaxe</b> = 3 Planks top row + 2 Sticks down the middle · <b>Axe</b> · <b>Shovel</b> = 1 Plank over 2 Sticks · <b>Stone Pickaxe</b> = 3 Cobblestone + 2 Sticks'
-      : '<b>1 Log → 4 Planks</b> · <b>2 Planks → 4 Sticks</b> · <b>4 Planks → Crafting Table</b> · place the Table & right-click it for the 3×3 grid (tools)';
+      ? '<b>Tools</b> (material = Planks / Cobblestone / Iron Ingot): <b>Pickaxe</b> = 3 mat top + 2 Sticks down middle · <b>Axe</b> = 2 mat + 1 mat&Stick + Stick · <b>Shovel</b> = 1 mat over 2 Sticks · <b>Sword</b> = 2 mat over 1 Stick (deals more damage)'
+      : '<b>1 Log → 4 Planks</b> · <b>2 Planks → 4 Sticks</b> · <b>4 Planks → Crafting Table</b> · place the Table & right-click it for the 3×3 grid (tools + swords)';
     this.panel.appendChild(hints);
 
     this.root.appendChild(this.panel);

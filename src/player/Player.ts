@@ -35,6 +35,7 @@ export class Player {
   flying = false;
   inWater = false;
   sneaking = false;
+  private collidedH = false;
 
   private readonly camera: THREE.PerspectiveCamera;
 
@@ -83,7 +84,10 @@ export class Player {
     const len = Math.hypot(wx, wz);
     if (len > 0) { wx /= len; wz /= len; }
 
-    this.inWater = world.getBlock(Math.floor(this.pos.x), Math.floor(this.pos.y + 0.9), Math.floor(this.pos.z)) === Block.WATER;
+    // in water if the head OR feet are submerged — keeps buoyancy until fully out
+    const ix = Math.floor(this.pos.x), iz = Math.floor(this.pos.z);
+    this.inWater = world.getBlock(ix, Math.floor(this.pos.y + 0.9), iz) === Block.WATER
+      || world.getBlock(ix, Math.floor(this.pos.y + 0.2), iz) === Block.WATER;
     this.sneaking = input.sneak && this.onGround && !this.flying;
 
     if (this.flying) {
@@ -99,9 +103,9 @@ export class Player {
       this.vel.z = wz * speed;
 
       if (this.inWater) {
-        this.vel.y -= GRAVITY * 0.3 * dt;
-        if (input.jump) this.vel.y = 3.5; // swim up
-        this.vel.y = Math.max(this.vel.y, -6);
+        this.vel.y -= GRAVITY * 0.22 * dt; // gentle sink
+        if (input.jump) this.vel.y = 4.2;  // swim up
+        this.vel.y = Math.max(this.vel.y, -5);
       } else {
         this.vel.y -= GRAVITY * dt;
         if (this.vel.y < -TERMINAL) this.vel.y = -TERMINAL;
@@ -110,8 +114,13 @@ export class Player {
     }
 
     // integrate axis-by-axis with collision
+    this.collidedH = false;
     this.moveX(world, this.vel.x * dt);
     this.moveZ(world, this.vel.z * dt);
+    // auto-climb out of water: swimming into a shore/ledge boosts you up onto land
+    if (this.inWater && this.collidedH && (wx !== 0 || wz !== 0)) {
+      this.vel.y = Math.max(this.vel.y, 6);
+    }
     this.moveY(world, this.vel.y * dt);
 
     this.syncCamera();
@@ -138,6 +147,7 @@ export class Player {
       if (dx > 0) this.pos.x = Math.floor(this.pos.x + HALF) - HALF - EPS;
       else if (dx < 0) this.pos.x = Math.floor(this.pos.x - HALF) + 1 + HALF + EPS;
       this.vel.x = 0;
+      this.collidedH = true;
     }
     if (this.sneaking && !this.hasGroundUnder(world)) { this.pos.x = prev; this.vel.x = 0; }
   }
@@ -149,6 +159,7 @@ export class Player {
       if (dz > 0) this.pos.z = Math.floor(this.pos.z + HALF) - HALF - EPS;
       else if (dz < 0) this.pos.z = Math.floor(this.pos.z - HALF) + 1 + HALF + EPS;
       this.vel.z = 0;
+      this.collidedH = true;
     }
     if (this.sneaking && !this.hasGroundUnder(world)) { this.pos.z = prev; this.vel.z = 0; }
   }

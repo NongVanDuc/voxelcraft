@@ -558,7 +558,8 @@ export class Game {
   private tryMelee(): boolean {
     const dir = new THREE.Vector3();
     this.camera.getWorldDirection(dir);
-    return this.mobs.tryAttack(this.player.eye, dir, 3.4, this.blockDistance(), 4, this.mobContext());
+    const dmg = itemDef(this.inventory.getSelected()?.id ?? -1)?.attack ?? 3; // swords hit harder
+    return this.mobs.tryAttack(this.player.eye, dir, 3.4, this.blockDistance(), dmg, this.mobContext());
   }
 
   private updateFallAndSteps(dt: number): void {

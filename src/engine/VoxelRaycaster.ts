@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { World } from './World';
-import { isSolid } from '../blocks/blockTypes';
+import { Block } from '../blocks/blockTypes';
 
 export interface RayHit {
   /** Block that was hit. */
@@ -40,7 +40,8 @@ export function raycastVoxel(world: World, origin: THREE.Vector3, dir: THREE.Vec
 
   while (t <= maxDist) {
     const id = world.getBlock(x, y, z);
-    if (id !== 0 && isSolid(id)) {
+    // target any real block (including plants/flowers); the ray passes through air + water
+    if (id !== Block.AIR && id !== Block.WATER) {
       return { bx: x, by: y, bz: z, px: x + nx, py: y + ny, pz: z + nz, nx, ny, nz };
     }
     if (tMaxX < tMaxY && tMaxX < tMaxZ) {

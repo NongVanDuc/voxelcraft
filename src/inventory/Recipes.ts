@@ -4,6 +4,7 @@ import { Item } from '../items/items';
 const P = Block.PLANKS;
 const S = Item.STICK;
 const C = Block.COBBLESTONE;
+const I = Item.IRON_INGOT;
 
 export interface Recipe {
   shapeless?: number[];
@@ -15,10 +16,20 @@ export const RECIPES: Recipe[] = [
   { shapeless: [Block.OAK_LOG], out: { id: Block.PLANKS, count: 4 } },
   { shapeless: [P, P], out: { id: Item.STICK, count: 4 } },
   { pattern: [[P, P], [P, P]], out: { id: Block.CRAFTING_TABLE, count: 1 } },
+  // tools — wooden / stone / iron
   { pattern: [[P, P, P], [0, S, 0], [0, S, 0]], out: { id: Item.WOODEN_PICKAXE, count: 1 } },
   { pattern: [[P, P], [P, S], [0, S]], out: { id: Item.WOODEN_AXE, count: 1 } },
   { pattern: [[P], [S], [S]], out: { id: Item.WOODEN_SHOVEL, count: 1 } },
   { pattern: [[C, C, C], [0, S, 0], [0, S, 0]], out: { id: Item.STONE_PICKAXE, count: 1 } },
+  { pattern: [[C, C], [C, S], [0, S]], out: { id: Item.STONE_AXE, count: 1 } },
+  { pattern: [[C], [S], [S]], out: { id: Item.STONE_SHOVEL, count: 1 } },
+  { pattern: [[I, I, I], [0, S, 0], [0, S, 0]], out: { id: Item.IRON_PICKAXE, count: 1 } },
+  { pattern: [[I, I], [I, S], [0, S]], out: { id: Item.IRON_AXE, count: 1 } },
+  { pattern: [[I], [S], [S]], out: { id: Item.IRON_SHOVEL, count: 1 } },
+  // swords
+  { pattern: [[P], [P], [S]], out: { id: Item.WOODEN_SWORD, count: 1 } },
+  { pattern: [[C], [C], [S]], out: { id: Item.STONE_SWORD, count: 1 } },
+  { pattern: [[I], [I], [S]], out: { id: Item.IRON_SWORD, count: 1 } },
 ];
 
 interface Box { rows: number[][]; }

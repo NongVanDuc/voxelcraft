@@ -257,6 +257,36 @@ const painters: Record<string, Painter> = {
       for (let x = 3; x < 13; x++) px(x, y, vary({ r: 210, g: 210, b: 215 }, r, 16));
     for (let x = 3; x < 13; x++) px(x, 6, { r: 235, g: 235, b: 240 });
   },
+
+  item_pickaxe: (px, r) => {
+    clear(px);
+    const handle = { r: 130, g: 95, b: 55 };
+    for (let i = 0; i < 9; i++) { const x = 7 + Math.floor(i * 0.4), y = 13 - i; px(x, y, vary(handle, r, 8)); px(x + 1, y, vary({ r: 100, g: 72, b: 42 }, r, 8)); }
+    const head = { r: 185, g: 185, b: 192 };
+    for (let x = 3; x <= 12; x++) px(x, 3, vary(head, r, 12));
+    px(3, 4, head); px(12, 4, head); px(2, 4, head); px(13, 4, head); px(7, 4, head); px(8, 4, head);
+  },
+  item_axe: (px, r) => {
+    clear(px);
+    const handle = { r: 130, g: 95, b: 55 };
+    for (let i = 0; i < 10; i++) { const x = 9 - Math.floor(i * 0.3), y = 14 - i; px(x, y, vary(handle, r, 8)); px(x + 1, y, vary({ r: 100, g: 72, b: 42 }, r, 8)); }
+    const head = { r: 185, g: 185, b: 192 };
+    for (let y = 2; y <= 7; y++) for (let x = 4; x <= 10 - Math.abs(y - 4); x++) px(x, y, vary(head, r, 10));
+  },
+  item_shovel: (px, r) => {
+    clear(px);
+    const handle = { r: 130, g: 95, b: 55 };
+    for (let i = 0; i < 9; i++) { const y = 14 - i; px(8, y, vary(handle, r, 8)); px(9, y, vary({ r: 100, g: 72, b: 42 }, r, 8)); }
+    const head = { r: 185, g: 185, b: 192 };
+    for (let y = 2; y <= 5; y++) for (let x = 6; x <= 11; x++) px(x, y, vary(head, r, 10));
+  },
+  item_sword: (px, r) => {
+    clear(px);
+    const blade = { r: 205, g: 210, b: 220 };
+    for (let i = 0; i < 9; i++) { const x = 5 + i, y = 11 - i; px(x, y, vary(blade, r, 8)); px(x - 1, y + 1, vary({ r: 150, g: 155, b: 165 }, r, 8)); }
+    px(4, 12, { r: 120, g: 90, b: 50 }); px(3, 11, { r: 120, g: 90, b: 50 }); px(2, 13, { r: 120, g: 90, b: 50 });
+    px(3, 13, { r: 90, g: 65, b: 40 }); px(2, 14, { r: 90, g: 65, b: 40 });
+  },
 };
 
 function clear(px: (x: number, y: number, c: RGB) => void) {
